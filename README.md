@@ -1,32 +1,55 @@
-# Antigravity Skills Collection
+# Antigravity Skills & CVE Testbeds Collection
 
-A curated collection of modular skills, automation runbooks, and offensive/defensive tooling for Google Antigravity and AI coding assistants.
-
----
-
-## Available Skills
-
-### 1. [`cve-fingerprint-lab`](./cve-fingerprint-lab/)
-**Automated CVE Research, Quarantined Docker Lab Orchestration & Defensive Fingerprinting**
-
-* **Advisory & Image Intelligence (`lookup_cve.py`):** Queries open vulnerability databases (OSV.dev, CIRCL) to map software versions to Docker Hub / Vulhub container images.
-* **Isolated Sandbox Provisioning (`deploy_lab.py`):** Generates resource-throttled Docker compose sandboxes bound strictly to local loopback (`127.0.0.1`).
-* **Detection Rule Synthesis (`generate_fingerprint.py`):** Probes live container endpoints and synthesizes multi-layer defensive rules:
-  * **Nuclei Scanner Templates (`.yaml`)**
-  * **Suricata / Snort NIDS Rules (`.rules`)**
-  * **Sigma SIEM Access Log Queries (`.yml`)**
-  * **WAF / Reverse Proxy Filters**
-* **Clean Teardown (`teardown_lab.py`):** Dismantles containers, networks, and prunes temporary volumes.
-* **Master Lifecycle Playbook:** Includes end-to-end procedures and real-world zero-day case studies (e.g. GeoServer `jsonArrayContains`).
+A curated collection of modular skills, automation runbooks, defensive tooling, and reproducible CVE benchmark testbeds for Google Antigravity and AI coding assistants.
 
 ---
 
-## Installation & Workspace Setup
+## 📂 Repository Structure
 
-To use these skills in any Antigravity workspace:
-1. Clone or copy the desired skill directory into your project's `.agents/skills/` folder:
-   ```bash
-   mkdir -p .agents/skills/
-   cp -r cve-fingerprint-lab .agents/skills/
-   ```
-2. The Antigravity agent will automatically discover the skill and activate its runbooks when relevant tasks or CVE investigations are requested.
+```text
+julwright/-skills/
+├── README.md
+├── cve-fingerprint-lab/              # The core Antigravity skill
+│   ├── SKILL.md
+│   ├── scripts/
+│   │   ├── lookup_cve.py             # Query vulnerability databases (OSV/CIRCL)
+│   │   ├── deploy_lab.py             # Loopback Docker sandbox orchestrator
+│   │   ├── generate_fingerprint.py   # Nuclei, Suricata, Sigma rule generator
+│   │   ├── simulate_telemetry.py     # Multi-tier forensic log synthesizer
+│   │   ├── export_cve_test.py        # Automated test package generator & git sync
+│   │   └── teardown_lab.py           # Container cleanup utility
+│   ├── references/
+│   │   ├── cve_reproduction_playbook.md
+│   │   ├── containeryard_and_sources.md
+│   │   ├── fingerprint_methodology.md
+│   │   └── isolation_guidelines.md
+│   └── examples/
+└── cve-tests/                         # Dedicated benchmark packages for tested CVEs
+    └── GeoServer-jsonArrayContains/  # Sample testbed package
+        ├── README.md                 # Threat summary, affected versions, IoCs
+        ├── docker-compose.yml        # Quarantined sandbox definition
+        ├── rules/                    # Nuclei, Suricata, Sigma, and WAF rules
+        └── logs/                     # Multi-tier access, error, auditd, and Falco logs
+```
+
+---
+
+## 🛠️ How to Export & Push a New CVE Test
+
+When you research and test a new CVE, generate and push its dedicated package with one command:
+
+```bash
+python cve-fingerprint-lab/scripts/export_cve_test.py \
+  --cve "CVE-2023-46604" \
+  --image "vulhub/activemq:5.11.1" \
+  --port "8161:8161" \
+  --git-push
+```
+
+This automatically:
+1. Fetches advisory metadata and affected version matrices.
+2. Creates the isolated `docker-compose.yml`.
+3. Scaffolds detection rules (`rules/nuclei.yaml`, `rules/suricata.rules`, `rules/sigma.yml`, `rules/nginx_waf.conf`).
+4. Generates multi-tier telemetry logs (`logs/access.log`, `logs/application_error.log`, `logs/auditd.log`, `logs/falco_alert.json`).
+5. Generates the comprehensive `README.md`.
+6. Commits and pushes the package to `cve-tests/<CVE-NAME>/` on GitHub.
